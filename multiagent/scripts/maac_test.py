@@ -16,12 +16,12 @@ import multiagent.core.consensus as consensus
 if __name__ == '__main__':
     
     # Read config.
-    config = 'maac_config.yml'
-    config_path = None
+    config = 'D:/IITM/multiagent_opac/multiagent_rl_drone/multiagent/scripts/maac_config.yml'
+    config_path = "D:/IITM/multiagent_opac/multiagent_rl_drone/multiagent/scripts/maac_config.yml"
     if isinstance(config, str):
         config_path = config
         with open(config_path) as f:
-            config = yaml.load(f)
+            config = yaml.load(f, Loader=yaml.FullLoader)
     else:
         raise ValueError('config should be a string')
     
@@ -54,11 +54,11 @@ if __name__ == '__main__':
     
     # Set up experiment directory.
     experiment_dir = \
-        f"{config['results_path']}/{config['model']}-{datetime.now():%Y-%m-%d_%H:%M:%S}"
+        f"{config['results_path']}/{config['model']}-{datetime.now():%Y-%m-%d_%H-%M-%S}"
     if not os.path.exists(experiment_dir):
         os.makedirs(experiment_dir)
     if config_path is not None:
-        copyfile(config_path, f"{experiment_dir}/{config_path}")
+        copyfile(config_path, f"{experiment_dir}/maac_config.yml")
     
     
     # Seed, prepare env, prepare consensus matrix.

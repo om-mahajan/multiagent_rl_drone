@@ -24,12 +24,12 @@ UPDATE_INTERVAL = 10
 if __name__ == '__main__':
     
     # Read config.
-    config = 'maopac_config.yml'
-    config_path = None
+    config = 'D:/IITM/multiagent_opac/multiagent_rl_drone/multiagent/scripts/maopac_config.yml'
+    config_path = "D:/IITM/multiagent_opac/multiagent_rl_drone/multiagent/scripts/maopac_config.yml"
     if isinstance(config, str):
         config_path = config
         with open(config_path) as f:
-            config = yaml.load(f)
+            config = yaml.load(f, Loader=yaml.FullLoader)
     else:
         raise ValueError('config should be a string')
     
@@ -77,11 +77,11 @@ if __name__ == '__main__':
     
     # Set up experiment directory.
     experiment_dir = \
-        f"{config['results_path']}/{config['model']}-{datetime.now():%Y-%m-%d_%H:%M:%S}"
+        f"{config['results_path']}/{config['model']}-{datetime.now():%Y-%m-%d_%H-%M-%S}"
     if not os.path.exists(experiment_dir):
         os.makedirs(experiment_dir)
     if config_path is not None:
-        copyfile(config_path, f"{experiment_dir}/{config_path}")
+        copyfile(config_path, f"{experiment_dir}/maopac_config.yml")
     
     
     # Seed, prepare env, prepare consensus matrices.
@@ -123,6 +123,7 @@ if __name__ == '__main__':
     
     
     rewards = []
+    consensus_errors = []
     start = time.time()
     
     for i in range(num_trains):
@@ -135,17 +136,38 @@ if __name__ == '__main__':
                 runner.env.feature_matrix)
         rewards.append(np.average(state_val_estimates))
         
+        # Calculate consensus error: |critic_params[i] - avg(critic_params)|
+        critic_params = np.array([agent.v.get_params() for agent in runner.metaagent.agents])
+        avg_critic_params = np.mean(critic_params, axis=0)
+        consensus_error = np.mean([np.linalg.norm(critic_params[j] - avg_critic_params) 
+                                   for j in range(num_agents)])
+        consensus_errors.append(consensus_error)
+        
     end = time.time()
     print('Time elapsed: {:.2f}m'.format((end - start)/60))
     
     if save_results:
-        # Save rewards and a figure.
+        # Save rewards and consensus errors.
         rewards_path = f"{experiment_dir}/rewards.npy"
-        np.save(rewards_path, rewards)
-        plot_path = f"{experiment_dir}/plot.png"    
+        np.save(rewards_path, rewards) 
+        consensus_errors_path = f"{experiment_dir}/consensus_errors.npy"
+        np.save(consensus_errors_path, consensus_errors)
+        
+        # Create plots.
         matplotlib.use('Agg')
-        plt.plot(np.arange(num_trains), rewards)
-        plt.savefig(plot_path)
+        
+        # Plot J_mu(theta) estimate
+        plot_path = f"{experiment_dir}/plot.png"
+        plt.figure(figsize=(6, 5))
+       
+        plt.plot(np.arange(num_trains), rewards, 
+                 label=f'$\\beta_\\pi={actor_stepsize_exponent}$, $\\beta_v={critic_stepsize_exponent}$')
+        plt.xlabel('Epochs')
+        plt.ylabel(r'$J_{\mu}(\theta)$ estimate', fontsize=12)
+        plt.grid(True, alpha=0.3)
+        plt.title(f'Off-Policy Objective, inner_loop inactive')
+        plt.legend(loc='best')
+        plt.savefig(plot_path, dpi=150)
         plt.close()
     elif not save_results:
         rmtree(experiment_dir)
