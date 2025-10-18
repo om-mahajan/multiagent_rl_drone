@@ -1,8 +1,10 @@
+### Roll Numbers involved in this project
+ME22B174, ME22B018
 ### Overview
-This package contains basic tools to test consensus-based on- and off-policy multi-agent actor-critic algorithms on a couple simple environments. It was used to perform the empirical evaluation in <https://arxiv.org/pdf/1903.06372.pdf>.
+We have forked a repo from the authors of the paper. The implementation by the authors did not demonstrate concensus process
 
 ### Installation
-Once you've cloned the repository, simply `cd` into it and do `pip install -e .`.
+Once you've cloned the repository, simply `cd` into it and do `pip install -e .`. 
 
 ### Disclaimer
-The code in this repository is a work-in-progress and is not yet well-documented. It will likely be massively overhauled in the future with complete disregard for backward compatibility.
+To run, set config in maopac_config.yml and run maopac_test.py, plots should appear in the results directory.
